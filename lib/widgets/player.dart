@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../models/video_info.dart';
+// import 'package:flutter_meedu_videoplayer/meedu_player.dart';
 
 class Player extends StatefulWidget {
   final VideoInfo video;
@@ -87,9 +88,7 @@ class _VideoPlayPauseState extends State<VideoPlayPause> {
   Widget build(BuildContext context) {
     final List<Widget> children = <Widget>[
       GestureDetector(
-        onDoubleTap: () {
-          
-        },
+        onDoubleTap: () {},
         child: VideoPlayer(controller),
         onPanUpdate: (details) {
           if (details.delta.dx > 0)

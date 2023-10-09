@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -14,20 +15,7 @@ import 'models/video_info.dart';
 import 'widgets/player.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-Future<List<String>> uploadFiles(List _images) async {
-  List<String> imagesUrls = [];
-
-  _images.forEach((_image) async {
-    StorageReference storageReference =
-        FirebaseStorage.instance.ref().child('posts/${_image.path}');
-    StorageUploadTask uploadTask = storageReference.putFile(_image);
-
-    imagesUrls.add(await (await uploadTask.onComplete).ref.getDownloadURL());
-  });
-  print(imagesUrls);
-  return imagesUrls;
-// List<String> urls = Future.wait(uploadFiles(_images));
-}
+import 'widgets/vlc_with_subtitle.dart';
 
 void main() => runApp(MyApp());
 
@@ -315,11 +303,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 context,
                 MaterialPageRoute(
                   builder: (context) {
-                    return
-                        // VideoPlayerWithEmbeddedSubtitlesSwitch(videoPath: video.videoUrl,)??
+                    return VideoPlayerWithSubtitles(
+                          videoPath: video.videoUrl,
+                        ) ??
                         Player(
-                      video: video,
-                    );
+                          video: video,
+                        );
                   },
                 ),
               );
@@ -332,22 +321,30 @@ class _MyHomePageState extends State<MyHomePage> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Stack(
-                          children: <Widget>[
-                            Container(
-                              width: thumbWidth.toDouble(),
-                              height: thumbHeight.toDouble(),
-                              child: Center(child: CircularProgressIndicator()),
+                        CachedNetworkImage(
+                              imageUrl: video.thumbUrl,
+                              height: 180,
+                              width: 120,
+                              fit: BoxFit.cover,
+                            ) ??
+                            Stack(
+                              children: <Widget>[
+                                Container(
+                                  width: thumbWidth.toDouble(),
+                                  height: thumbHeight.toDouble(),
+                                  child: Center(
+                                      child: CircularProgressIndicator()),
+                                ),
+                                ClipRRect(
+                                  borderRadius: new BorderRadius.circular(8.0),
+                                  child: FadeInImage.memoryNetwork(
+                                    placeholder: kTransparentImage,
+                                    image: video.thumbUrl,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ],
                             ),
-                            ClipRRect(
-                              borderRadius: new BorderRadius.circular(8.0),
-                              child: FadeInImage.memoryNetwork(
-                                placeholder: kTransparentImage,
-                                image: video.thumbUrl,
-                              ),
-                            ),
-                          ],
-                        ),
                         Expanded(
                           child: Container(
                             margin: new EdgeInsets.only(left: 20.0),
@@ -410,4 +407,19 @@ class _MyHomePageState extends State<MyHomePage> {
           onPressed: _takeVideo),
     );
   }
+}
+
+Future<List<String>> uploadFiles(List _images) async {
+  List<String> imagesUrls = [];
+
+  _images.forEach((_image) async {
+    StorageReference storageReference =
+        FirebaseStorage.instance.ref().child('posts/${_image.path}');
+    StorageUploadTask uploadTask = storageReference.putFile(_image);
+
+    imagesUrls.add(await (await uploadTask.onComplete).ref.getDownloadURL());
+  });
+  print(imagesUrls);
+  return imagesUrls;
+// List<String> urls = Future.wait(uploadFiles(_images));
 }
